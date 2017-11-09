@@ -115,6 +115,15 @@ namespace Kratos
 			this->Set_Convergeddamages(DamageElement, 2);
 		}
 
+		//if (this->Id() == 2 | this->Id() == 10)
+		//{
+		//	std::cout<<"******** Initialize sol step!!! *******"<<std::endl;
+		//	KRATOS_WATCH(this->Id())
+		//	KRATOS_WATCH(ElementThreshold)
+		//	//KRATOS_WATCH(TwoMinValues)
+		//	std::cout<<"**************************"<<std::endl;
+		//}
+
 	}
 
 	void AleCornVelElement::FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo)
@@ -1245,7 +1254,12 @@ namespace Kratos
 			f = (2.00*tan(3.14159*0.25 + friction_angle*0.5) / cos(friction_angle))*((I1*K3 / 3) + sqrt(J2)*(K1*cos(theta) - K2*sin(theta)*sin(friction_angle) / sqrt(3)));
 		}
 
-		if (this->Get_threshold(cont) == 0) { this->Set_threshold(c_max, cont); }   // 1st iteration sets threshold as c_max
+		if (this->Get_threshold(cont) == 0) 
+		{ 
+			this->Set_threshold(c_max, cont);
+			this->SetValue(INITIAL_THRESHOLD, c_max);
+		}   // 1st iteration sets threshold as c_max
+
 		c_threshold = this->Get_threshold(cont);
 		//this->Set_NonConvergedf_sigma(f, cont);
 

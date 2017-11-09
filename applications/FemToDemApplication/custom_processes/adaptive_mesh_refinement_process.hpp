@@ -241,14 +241,17 @@ protected:
         for(ElementsArrayType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it)
         {
 
-
-
             GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
-           // KRATOS_WATCH(GaussPointsStresses)
+			//if ((*it)->Id() == 10) 
+			//{
+			//	KRATOS_WATCH((*it)->GetValue(STRESS_THRESHOLD));
+			//	KRATOS_WATCH((*it)->GetValue(STRESS_THRESHOLD));
+			//} // ya no esta bien aqui
+
             //Triangles2D3N
             if((*it)->GetGeometry().PointsNumber() == 3)
             {
-                for(int i=0; i < 3; i++)
+                for(int i = 0; i < 3; i++)
                 {
                     pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0] += GaussPointsStresses[0];
                     pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[1] += GaussPointsStresses[1];

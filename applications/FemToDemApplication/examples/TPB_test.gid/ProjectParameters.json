@@ -82,7 +82,7 @@
             "skin_output":          false,
             "plane_output":         [],
             "nodal_results":       ["DISPLACEMENT","VELOCITY","ACCELERATION"],
-            "gauss_point_results": ["GREEN_LAGRANGE_STRAIN_TENSOR","CAUCHY_STRESS_TENSOR","STRESS_VECTOR","STRESS_VECTOR_INTEGRATED","DAMAGE_ELEMENT","IS_DAMAGED"]
+            "gauss_point_results": ["GREEN_LAGRANGE_STRAIN_TENSOR","CAUCHY_STRESS_TENSOR","STRESS_VECTOR","STRESS_VECTOR_INTEGRATED","DAMAGE_ELEMENT","IS_DAMAGED","STRESS_THRESHOLD"]
         },
         "point_data_configuration":  []
     },

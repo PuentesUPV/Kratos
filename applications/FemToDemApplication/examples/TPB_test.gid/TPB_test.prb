@@ -107,7 +107,7 @@ VALUE: true
 QUESTION: Write_Is_Damaged#CB#(true,false)
 VALUE: true
 QUESTION: Stress_Threshold#CB#(true,false)
-VALUE: false
+VALUE: true
 QUESTION: GiD_post_mode#CB#(GiD_PostAscii,GiD_PostAsciiZipped,GiD_PostBinary,GiD_PostHDF5)
 VALUE: GiD_PostAscii
 QUESTION: Write_deformed_mesh#CB#(WriteUndeformed,WriteDeformed)

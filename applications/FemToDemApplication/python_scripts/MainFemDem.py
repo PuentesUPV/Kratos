@@ -180,7 +180,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 
 		# Print model_part and properties
-		if(self.echo_level>1):
+		if(self.echo_level > 1):
 			print("")
 			print(self.main_model_part)
 			for properties in self.main_model_part.Properties:
@@ -363,6 +363,23 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 		# Eliminates elements from the mesh with damage > 0.98
 		#self.main_model_part.RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
+
+		# let's check the damage threshold
+		#if self.step > 14:
+		#	for elem in self.main_model_part.Elements:
+		#		if elem.Id	== 10:			
+		#			thres = elem.GetValuesOnIntegrationPoints(KratosFemDem.STRESS_THRESHOLD, self.main_model_part.ProcessInfo)
+		#			print("en python thres", thres)
+		#			Wait()
+
+
+
+
+
+
+
+
+
 
 		if(self.activate_AMR):
 			self.refine, self.last_mesh = self.AMR_util.CheckAMR(self.time)

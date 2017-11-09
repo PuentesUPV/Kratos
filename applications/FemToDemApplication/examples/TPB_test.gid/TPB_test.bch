@@ -7,7 +7,7 @@ Mescape Meshing AssignSizes BackgMesh
 D:\FemDem\applications\FemToDemApplication\examples\TPB_test.gid\TPB_test.bgm
 Mescape Meshing Generate
 Yes
-0.0121255 MeshingParametersFrom=Preferences
+-nan(ind) MeshingParametersFrom=Preferences
 Mescape Meshing MeshView
 Mescape Utilities Calculate
 Mescape Files WriteCalcFile
