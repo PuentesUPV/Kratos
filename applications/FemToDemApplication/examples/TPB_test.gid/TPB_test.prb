@@ -14,7 +14,7 @@ QUESTION: Delta_Time
 VALUE: 0.1
 HELP: Units in IS: s
 QUESTION: Echo_Level
-VALUE: 1
+VALUE: 0
 QUESTION: Parallel_Configuration#CB#(OpenMP,MPI)
 VALUE: OpenMP
 HELP: For the moment, MPI only works in Linux and requires compiling METIS_APPLICATION and TRILINOS_APPLICATION. Non-local_Damage and Fracture_Propagation do not work in MPI.

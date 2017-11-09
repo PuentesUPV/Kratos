@@ -154,6 +154,8 @@ namespace Kratos
 				//this->Set(TO_ERASE, true);
 				//this->Set(ACTIVE, false);
 				this->Set(ACTIVE, false);
+				double old_threshold = this->GetValue(STRESS_THRESHOLD);
+				this->SetValue(INITIAL_THRESHOLD, old_threshold);
 				//std::cout<<"id "<<this->Id()<<std::endl;
 				//std::cout<<"active  "<<this->Is(ACTIVE)<<std::endl;
 				//KRATOS_WATCH(this->GetValue(DAMAGE_ELEMENT))
@@ -174,12 +176,12 @@ namespace Kratos
 		this->Get2MaxValues(TwoMinValues, thresholds[0], thresholds[1], thresholds[2]);  // todo ojo con la funcion modificada
 		double EqThreshold = 0.5*(TwoMinValues[0] + TwoMinValues[1]);  // El menor o mayor?? TODO
 
-		if (this->Id() == 2 | this->Id() == 10)
-		{
-			KRATOS_WATCH(this->Id())
-			KRATOS_WATCH(EqThreshold)
-			KRATOS_WATCH(TwoMinValues)
-		}
+		// if (this->Id() == 2 | this->Id() == 10)
+		// {
+		// 	KRATOS_WATCH(this->Id())
+		// 	KRATOS_WATCH(EqThreshold)
+		// 	KRATOS_WATCH(TwoMinValues)
+		// }
 
 		//KRATOS_WATCH(EqThreshold)
 

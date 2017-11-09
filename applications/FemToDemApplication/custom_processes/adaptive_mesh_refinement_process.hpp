@@ -237,29 +237,44 @@ protected:
             Extrapolation(i,3) = ExtrapolationComponents[3];
         }
           
-
+        
         for(ElementsArrayType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it)
         {
 
-            GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
-			//if ((*it)->Id() == 10) 
-			//{
-			//	KRATOS_WATCH((*it)->GetValue(STRESS_THRESHOLD));
-			//	KRATOS_WATCH((*it)->GetValue(STRESS_THRESHOLD));
-			//} // ya no esta bien aqui
-
-            //Triangles2D3N
-            if((*it)->GetGeometry().PointsNumber() == 3)
+			bool condition_is_active = true;
+            if ((*it)->IsDefined(ACTIVE))
             {
-                for(int i = 0; i < 3; i++)
-                {
-                    pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0] += GaussPointsStresses[0];
-                    pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[1] += GaussPointsStresses[1];
-                    pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[2] += GaussPointsStresses[2];
-                    pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].NElems += 1;
-                }
+                condition_is_active = (*it)->Is(ACTIVE);
             }
-            // else //Quadrilateral2D4N
+
+            if (condition_is_active)
+            {
+               GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
+
+
+                //Triangles2D3N
+                if((*it)->GetGeometry().PointsNumber() == 3)
+                {
+                    for(int i = 0; i < 3; i++)
+                    {   //KRATOS_WATCH(pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0])
+                        pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0] += GaussPointsStresses[0];
+                        pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[1] += GaussPointsStresses[1];
+                        pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[2] += GaussPointsStresses[2];
+                        pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].NElems += 1;
+                    }
+                }
+            }     
+			//else // Inactive
+			// {
+			//	 if ((*it)->GetGeometry().PointsNumber() == 3)
+			//	 {
+			//		 for (int i = 0; i < 3; i++)
+			//		 {   
+			//			 pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].NElems += 1;
+			//		 }
+			//	 }
+			// }
+                // else //Quadrilateral2D4N
             // {
             //     for(int i=0;i<4;i++)
             //     {
@@ -280,9 +295,13 @@ protected:
             // }
         }
 
-        for(unsigned int i = 0; i<mNNodes;i++)
+        for(unsigned int i = 0; i < mNNodes; i++)
         {
-            pNodeStressesVector[i].EffectiveStressVector = pNodeStressesVector[i].EffectiveStressVector/pNodeStressesVector[i].NElems;
+			if (pNodeStressesVector[i].NElems == 0) pNodeStressesVector[i].NElems = 1; // node surrounded by inactive elems
+
+            pNodeStressesVector[i].EffectiveStressVector = pNodeStressesVector[i].EffectiveStressVector / pNodeStressesVector[i].NElems;
+			KRATOS_WATCH(i)
+			KRATOS_WATCH(pNodeStressesVector[i].EffectiveStressVector)
         }
 
 
@@ -338,7 +357,7 @@ protected:
         GaussPointWeights[0] = GPWeight;
         GaussPointWeights[1] = GPWeight;
 
-        for(int i=0; i < 4; i++)
+        for(int i = 0; i < 4; i++)
         {
             InterpolationComponents = this->ShapeFunctions( (GPLocalCoordinates[i])[0] , (GPLocalCoordinates[i])[1] );
             Interpolation(i,0) = InterpolationComponents[0];
@@ -456,7 +475,7 @@ protected:
         double* ElementDimension = new double[mNElements];
         double m_coef = 1;
         double d_coef = 2;
-        double q_coef = (2*m_coef + d_coef)/2;
+        double q_coef = (2*m_coef + d_coef) / 2;
         int Elem_it = 0;
         double TotalArea = 0.0;
 
@@ -467,7 +486,7 @@ protected:
                   ((*it)->GetGeometry().GetPoint((*it)->GetGeometry().PointsNumber()-1).Y()-(*it)->GetGeometry().GetPoint(0).Y())*
                   ((*it)->GetGeometry().GetPoint((*it)->GetGeometry().PointsNumber()-1).Y()-(*it)->GetGeometry().GetPoint(0).Y()));
       
-            for(unsigned int i=0;i<((*it)->GetGeometry().PointsNumber()-1);i++)
+            for(unsigned int i = 0; i < ((*it)->GetGeometry().PointsNumber()-1); i++)
             {
                 AuxEDim = sqrt(((*it)->GetGeometry().GetPoint(i).X()-(*it)->GetGeometry().GetPoint(i+1).X())*
                        ((*it)->GetGeometry().GetPoint(i).X()-(*it)->GetGeometry().GetPoint(i+1).X()) +
