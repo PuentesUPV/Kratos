@@ -284,6 +284,8 @@ class AdaptiveMeshRefinementUtility:
 
             #test
             model_part.ProcessInfo.SetValue(STEP, step)
+            dyn_mode  = model_part_old.ProcessInfo[IS_DYNAMIC]
+            model_part.ProcessInfo.SetValue(IS_DYNAMIC, dyn_mode)
             #print("stepppp1 :", model_part.ProcessInfo[STEP])
             #Wait()
             # Add processes -> en main

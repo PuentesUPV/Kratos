@@ -228,7 +228,7 @@ protected:
         NodeCoord[1] = sqrt(3);
         NodeLocalCoordinates[3] = NodeCoord;
 
-        for(int i=0; i<4; i++)
+        for(int i = 0; i < 4; i++)
         {
             ExtrapolationComponents = this->ShapeFunctions( (NodeLocalCoordinates[i])[0] , (NodeLocalCoordinates[i])[1] );
             Extrapolation(i,0) = ExtrapolationComponents[0];
@@ -250,7 +250,6 @@ protected:
             if (condition_is_active)
             {
                GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
-
 
                 //Triangles2D3N
                 if((*it)->GetGeometry().PointsNumber() == 3)
@@ -300,8 +299,8 @@ protected:
 			if (pNodeStressesVector[i].NElems == 0) pNodeStressesVector[i].NElems = 1; // node surrounded by inactive elems
 
             pNodeStressesVector[i].EffectiveStressVector = pNodeStressesVector[i].EffectiveStressVector / pNodeStressesVector[i].NElems;
-			KRATOS_WATCH(i)
-			KRATOS_WATCH(pNodeStressesVector[i].EffectiveStressVector)
+			//KRATOS_WATCH(i)
+			//KRATOS_WATCH(pNodeStressesVector[i].EffectiveStressVector)
         }
 
 
@@ -370,96 +369,107 @@ protected:
           
         for (ElementsArrayType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it)
         {
-           GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR); // Cornejo
-      
-            young   = (*it)->GetProperties()[YOUNG_MODULUS];
-            poisson = (*it)->GetProperties()[POISSON_RATIO];
-      
-            if(mplane_state == "Plane_Stress")
-            {
-                aux1 = young/(1-poisson*poisson);
-                aux2 = poisson*aux1;
-                aux3 = young/(2*(1+poisson));
-            }
-            else
-            {
-                aux1 = young*(1-poisson)/((1+poisson)*(1-2*poisson));
-                aux2 = aux1*poisson/(1-poisson);
-                aux3 = young/(2*(1+poisson));
-            }
-      
-            InvElasticConstitutiveMatrix(0,0) = aux1/(aux1*aux1-aux2*aux2);
-            InvElasticConstitutiveMatrix(0,1) = -aux2/(aux1*aux1-aux2*aux2);
-            InvElasticConstitutiveMatrix(1,0) = -aux2/(aux1*aux1-aux2*aux2);
-            InvElasticConstitutiveMatrix(1,1) = aux1/(aux1*aux1-aux2*aux2);
-            InvElasticConstitutiveMatrix(2,2) = 1/aux3;
-      
-            //Triangles2D3N
-            if ((*it)->GetGeometry().PointsNumber() == 3)
-            {
-                SmoothedStress = ZeroVector(3);
+			bool condition_is_active = true;
+			if ((*it)->IsDefined(ACTIVE))
+			{
+				condition_is_active = (*it)->Is(ACTIVE);
+			}
 
-                for (int i = 0; i < 3; i++)
-                {
-                    SmoothedStress += NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector;
-                }
+			if (condition_is_active)
+			{
+				GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR); // Cornejo
 
-                SmoothedStress /= 3;
-        
-                StressDifference = SmoothedStress - GaussPointsStresses;
-        
-                EError = sqrt(inner_prod((prod(StressDifference,InvElasticConstitutiveMatrix)),StressDifference)*(*it)->GetGeometry().Area());
-        
-                EStrainEnergy = sqrt(inner_prod((prod(SmoothedStress,InvElasticConstitutiveMatrix)),SmoothedStress)*(*it)->GetGeometry().Area());
-            }
-            // else //Quadrilaterals2D4N
-            // {
-            //     for(int i=0; i<4; i++)
-            //     {
-            //         QuadNodeStresses(i,0) = NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0];
-            //         QuadNodeStresses(i,1) = NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[1];
-            //         QuadNodeStresses(i,2) = NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[2];
-              
-            //         NodeCoordinates(i,0) = (*it)->GetGeometry().GetPoint(i).X();
-            //         NodeCoordinates(i,1) = (*it)->GetGeometry().GetPoint(i).Y();
-              
-            //         QuadStressDifference[i] = ZeroVector(3);
-            //         QuadSmoothedStress[i] = ZeroVector(3);
-            //     }
-        
-            //     GPSmoothedStresses = prod(Interpolation,QuadNodeStresses);
-        
-            //     for(int i=0; i<4; i++)
-            //     {
-            //         Jacobian = prod(SFD_Matrices[i],NodeCoordinates);
-            //         Det_Jacobian = Jacobian(0,0)*Jacobian(1,1) - Jacobian(0,1)*Jacobian(1,0);
-            //         D_Area[i] = Det_Jacobian*GaussPointWeights[0]*GaussPointWeights[1];
-          
-            //         (QuadStressDifference[i])[0] = GPSmoothedStresses(i,0) - (GaussPointsStresses[i])[0];
-            //         (QuadStressDifference[i])[1] = GPSmoothedStresses(i,1) - (GaussPointsStresses[i])[1];
-            //         (QuadStressDifference[i])[2] = GPSmoothedStresses(i,2) - (GaussPointsStresses[i])[2];          
+				young = (*it)->GetProperties()[YOUNG_MODULUS];
+				poisson = (*it)->GetProperties()[POISSON_RATIO];
 
-            //         (QuadSmoothedStress[i])[0] = GPSmoothedStresses(i,0);
-            //         (QuadSmoothedStress[i])[1] = GPSmoothedStresses(i,1);
-            //         (QuadSmoothedStress[i])[2] = GPSmoothedStresses(i,2);
-            //     }
-        
-            //     EError = sqrt(inner_prod((prod(QuadStressDifference[0],InvElasticConstitutiveMatrix)),QuadStressDifference[0])*D_Area[0] +
-            //           inner_prod((prod(QuadStressDifference[1],InvElasticConstitutiveMatrix)),QuadStressDifference[1])*D_Area[1] +
-            //           inner_prod((prod(QuadStressDifference[2],InvElasticConstitutiveMatrix)),QuadStressDifference[2])*D_Area[2] +
-            //           inner_prod((prod(QuadStressDifference[3],InvElasticConstitutiveMatrix)),QuadStressDifference[3])*D_Area[3]);
+				if (mplane_state == "Plane_Stress")
+				{
+					aux1 = young / (1 - poisson*poisson);
+					aux2 = poisson*aux1;
+					aux3 = young / (2 * (1 + poisson));
+				}
+				else
+				{
+					aux1 = young*(1 - poisson) / ((1 + poisson)*(1 - 2 * poisson));
+					aux2 = aux1*poisson / (1 - poisson);
+					aux3 = young / (2 * (1 + poisson));
+				}
 
-            //     EStrainEnergy = sqrt(inner_prod((prod(QuadSmoothedStress[0],InvElasticConstitutiveMatrix)),QuadSmoothedStress[0])*D_Area[0] +
-            //                  inner_prod((prod(QuadSmoothedStress[1],InvElasticConstitutiveMatrix)),QuadSmoothedStress[1])*D_Area[1] +
-            //                  inner_prod((prod(QuadSmoothedStress[2],InvElasticConstitutiveMatrix)),QuadSmoothedStress[2])*D_Area[2] +
-            //                  inner_prod((prod(QuadSmoothedStress[3],InvElasticConstitutiveMatrix)),QuadSmoothedStress[3])*D_Area[3]);
-            // }
-     
-            pElementError[Elem_it] = EError;
-            rGlobalError += EError*EError;
-            rGlobalStrainEnergy += EStrainEnergy*EStrainEnergy;
-      
-            Elem_it += 1;
+				InvElasticConstitutiveMatrix(0, 0) = aux1 / (aux1*aux1 - aux2*aux2);
+				InvElasticConstitutiveMatrix(0, 1) = -aux2 / (aux1*aux1 - aux2*aux2);
+				InvElasticConstitutiveMatrix(1, 0) = -aux2 / (aux1*aux1 - aux2*aux2);
+				InvElasticConstitutiveMatrix(1, 1) = aux1 / (aux1*aux1 - aux2*aux2);
+				InvElasticConstitutiveMatrix(2, 2) = 1 / aux3;
+
+				//Triangles2D3N
+				if ((*it)->GetGeometry().PointsNumber() == 3)
+				{
+					SmoothedStress = ZeroVector(3);
+
+					for (int i = 0; i < 3; i++)
+					{
+						SmoothedStress += NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].EffectiveStressVector;
+					}
+
+					SmoothedStress /= 3;
+
+					StressDifference = SmoothedStress - GaussPointsStresses;
+					//KRATOS_WATCH(StressDifference)
+					EError = sqrt(inner_prod((prod(StressDifference, InvElasticConstitutiveMatrix)), StressDifference)*(*it)->GetGeometry().Area());
+					//KRATOS_WATCH(EError)
+
+						EStrainEnergy = sqrt(inner_prod((prod(SmoothedStress, InvElasticConstitutiveMatrix)), SmoothedStress)*(*it)->GetGeometry().Area());
+				}
+				// else //Quadrilaterals2D4N
+				// {
+				//     for(int i=0; i<4; i++)
+				//     {
+				//         QuadNodeStresses(i,0) = NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0];
+				//         QuadNodeStresses(i,1) = NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[1];
+				//         QuadNodeStresses(i,2) = NodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[2];
+
+				//         NodeCoordinates(i,0) = (*it)->GetGeometry().GetPoint(i).X();
+				//         NodeCoordinates(i,1) = (*it)->GetGeometry().GetPoint(i).Y();
+
+				//         QuadStressDifference[i] = ZeroVector(3);
+				//         QuadSmoothedStress[i] = ZeroVector(3);
+				//     }
+
+				//     GPSmoothedStresses = prod(Interpolation,QuadNodeStresses);
+
+				//     for(int i=0; i<4; i++)
+				//     {
+				//         Jacobian = prod(SFD_Matrices[i],NodeCoordinates);
+				//         Det_Jacobian = Jacobian(0,0)*Jacobian(1,1) - Jacobian(0,1)*Jacobian(1,0);
+				//         D_Area[i] = Det_Jacobian*GaussPointWeights[0]*GaussPointWeights[1];
+
+				//         (QuadStressDifference[i])[0] = GPSmoothedStresses(i,0) - (GaussPointsStresses[i])[0];
+				//         (QuadStressDifference[i])[1] = GPSmoothedStresses(i,1) - (GaussPointsStresses[i])[1];
+				//         (QuadStressDifference[i])[2] = GPSmoothedStresses(i,2) - (GaussPointsStresses[i])[2];          
+
+				//         (QuadSmoothedStress[i])[0] = GPSmoothedStresses(i,0);
+				//         (QuadSmoothedStress[i])[1] = GPSmoothedStresses(i,1);
+				//         (QuadSmoothedStress[i])[2] = GPSmoothedStresses(i,2);
+				//     }
+
+				//     EError = sqrt(inner_prod((prod(QuadStressDifference[0],InvElasticConstitutiveMatrix)),QuadStressDifference[0])*D_Area[0] +
+				//           inner_prod((prod(QuadStressDifference[1],InvElasticConstitutiveMatrix)),QuadStressDifference[1])*D_Area[1] +
+				//           inner_prod((prod(QuadStressDifference[2],InvElasticConstitutiveMatrix)),QuadStressDifference[2])*D_Area[2] +
+				//           inner_prod((prod(QuadStressDifference[3],InvElasticConstitutiveMatrix)),QuadStressDifference[3])*D_Area[3]);
+
+				//     EStrainEnergy = sqrt(inner_prod((prod(QuadSmoothedStress[0],InvElasticConstitutiveMatrix)),QuadSmoothedStress[0])*D_Area[0] +
+				//                  inner_prod((prod(QuadSmoothedStress[1],InvElasticConstitutiveMatrix)),QuadSmoothedStress[1])*D_Area[1] +
+				//                  inner_prod((prod(QuadSmoothedStress[2],InvElasticConstitutiveMatrix)),QuadSmoothedStress[2])*D_Area[2] +
+				//                  inner_prod((prod(QuadSmoothedStress[3],InvElasticConstitutiveMatrix)),QuadSmoothedStress[3])*D_Area[3]);
+				// }
+
+				pElementError[Elem_it] = EError;
+				rGlobalError += EError*EError;
+				rGlobalStrainEnergy += EStrainEnergy*EStrainEnergy;
+
+				Elem_it += 1;
+			}
+			else Elem_it += 1;
         }
 
         rGlobalError = sqrt(rGlobalError);
@@ -510,30 +520,27 @@ protected:
         {
             for(ElementsArrayType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it)
             {
-                pElementRefinementParameter[Elem_it] = pow(GlobalError/(mpermissible_error*GlobalStrainEnergy),1/m_coef)*
-                                              pow(sqrt(mNElements)*ElementError[Elem_it]/GlobalError,1/q_coef);
-                
-                                              
-
-
-                //std::cout << (*it)->Is(ACTIVE) << "   " << (*it)->Id() << std::endl;
-
-                double damage = (*it)->GetValue(DAMAGE_ELEMENT);
                 bool condition_is_active = true;
                 if ((*it)->IsDefined(ACTIVE))
                 {
                     condition_is_active = (*it)->Is(ACTIVE);
                 }
 
+
+                //std::cout << (*it)->Is(ACTIVE) << "   " << (*it)->Id() << std::endl;
+
+                double damage = (*it)->GetValue(DAMAGE_ELEMENT);
+                
                 if (condition_is_active)
                 {
+                    pElementRefinementParameter[Elem_it] = pow(GlobalError/(mpermissible_error*GlobalStrainEnergy),1/m_coef)*pow(sqrt(mNElements)*ElementError[Elem_it]/GlobalError,1/q_coef);
                     pNewElementDimension[Elem_it] =  ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
                 }
                 else
                 {
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it]/4;
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
-					pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / 10.0;
+					pNewElementDimension[Elem_it] = 0.1*ElementDimension[Elem_it];
                 }
                     
                 Elem_it += 1;
