@@ -69,7 +69,7 @@
     "output_configuration": {
         "result_file_configuration": {
             "gidpost_flags":       {
-                "WriteDeformedMeshFlag": "WriteDeformed",
+                "WriteDeformedMeshFlag": "WriteUndeformed",
                 "WriteConditionsFlag":   "WriteElementsOnly",
                 "GiDPostMode":           "GiD_PostAscii",
                 "MultiFileFlag":         "MultipleFiles"

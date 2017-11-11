@@ -10,8 +10,8 @@ Begin Properties 1
     THICKNESS                1.0
 
 // DAMAGE PARAMETERS
-    YIELD_SURFACE            ModifiedMohrCoulomb
-    YIELD_STRESS_C           100e6
+    YIELD_SURFACE            Rankine
+    YIELD_STRESS_C           400e6
     YIELD_STRESS_T           1.5e6
     FRAC_ENERGY_T            1.5e5
     INTERNAL_FRICTION_ANGLE  32

@@ -1,0 +1,33 @@
+BeginZE D:/FemDem/applications/FemToDemApplication/examples/poroexample.gid/poroexample.vv
+   x -0.334405839443206787 1.60035669803619385
+   y 0.647034764289855957 -0.364823818206787109
+   z -0.790105283260345459 0.790105283260345459
+   e 0.707546591758728027
+   v 0 0 0
+   r 1
+   m 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+   c 0.721464157104492188 0.146601259708404541 0
+   pd 0
+   pno 0
+   pfo 0
+   pf 4
+   pv 0
+   NowUse 2
+   DrawingType 3
+   LightVector 90 90 150 0
+   OGLShadow(UseShadows) 0
+   OGLShadow(RenderMode) RenderNice
+   OGLShadow(ShadowBias) -0.002
+   OGLShadow(AmbientShadows) 1
+   OGLShadow(UseFBO) 0
+   OGLShadow(FBOSize) 2048
+   OGLShadow(DimmedLightFactor) 0.02
+   OGLStereo(UseStereo) 0
+   OGLStereo(RelativeEyeDistance) 1
+   OGLStereo(FlipEyes) 0
+   OGLStereo(StereoMode) AnaglyphColors
+   OGLStereo(EyeDistance) 0.075
+   OGLStereo(LeftEyeDistance) 1 0 0 1
+   OGLStereo(RightEyeDistance) 0 1 1 1
+EndZE D:/FemDem/applications/FemToDemApplication/examples/poroexample.gid/poroexample.vv
+

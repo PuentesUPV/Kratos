@@ -195,7 +195,11 @@ namespace Kratos
 	{
 		//*****************************
 		KRATOS_TRY
-		//KRATOS_WATCH(rCurrentProcessInfo[IS_DYNAMIC])
+		//if (rCurrentProcessInfo[STEP] > 30)
+		//{ 
+			//KRATOS_WATCH(this->Id())
+		//}
+		
 		//1.-Initialize sizes for the system components:
 		const unsigned int number_of_nodes = GetGeometry().size();
 		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
@@ -289,6 +293,13 @@ namespace Kratos
 			this->CalculateDeformationMatrix(B, DN_DX);
 			this->SetBMatrix(B);
 
+
+			//if (rCurrentProcessInfo[STEP] > 30)
+			//{ 
+			//	KRATOS_WATCH(this->Id())
+			//	KRATOS_WATCH(this->Is(ACTIVE))
+			//	KRATOS_WATCH(Values.GetStressVector())
+			//}
 		}
 		KRATOS_CATCH("")
 
@@ -455,6 +466,22 @@ namespace Kratos
 			if (damage_element >= 0.999) { damage_element = 0.999; }
 			this->Set_NonConvergeddamage(damage_element);
 
+
+			//if (rCurrentProcessInfo[STEP] > 30 && this->Id() == 10792)
+			//{
+			//	KRATOS_WATCH(this->Id())
+			//	//KRATOS_WATCH(rRightHandSideVector)
+			//	KRATOS_WATCH(TwoMaxDamages)
+			//	KRATOS_WATCH(damage_element)
+			//	KRATOS_WATCH(this->Get_l_char(0));
+			//	KRATOS_WATCH(this->Get_l_char(1));
+			//	KRATOS_WATCH(this->Get_l_char(2));
+ 		//		KRATOS_WATCH(this->Get_l_char(2));
+			//	//KRATOS_WATCH(Values.GetStressVector())
+			//}
+
+
+
 			Vector StressVector = ZeroVector(3);
 			StressVector = this->GetValue(STRESS_VECTOR);
 			IntegratedStressVector = (1 - damage_element)*StressVector;
@@ -497,7 +524,7 @@ namespace Kratos
 			// 	TangentTensor = Aux / 3;
 			// 	noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight * Matrix(prod(TangentTensor, B))); //LHS
 			// }
-
+			
 			Vector VolumeForce = ZeroVector(dimension);
 			VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
 			// RHS
@@ -512,6 +539,15 @@ namespace Kratos
 
 			//compute and add internal forces (RHS = rRightHandSideVector = Fext - Fint)
 			noalias(rRightHandSideVector) -= IntegrationWeight * prod(trans(B), (1 - damage_element)*StressVector);
+
+			//if (rCurrentProcessInfo[STEP] > 30 && this->Id()==10792)
+			//{ 
+			//	KRATOS_WATCH(this->Id())
+			//	KRATOS_WATCH(rRightHandSideVector)
+			//	KRATOS_WATCH(StressVector)
+			//	KRATOS_WATCH(damage_element)
+			//	//KRATOS_WATCH(Values.GetStressVector())
+			//}
 
 		}
 		KRATOS_CATCH("")
@@ -871,24 +907,42 @@ namespace Kratos
 			{
 				if (NodesElem1[cont].Id() == NodesElem2[cont2].Id())
 				{
-					Xcoord[aux] = NodesElem1[cont].X();
-					Ycoord[aux] = NodesElem1[cont].Y();
+					Xcoord[aux] = NodesElem1[cont].X0();
+					Ycoord[aux] = NodesElem1[cont].Y0();
 					aux++;                              // aux > 3 if the two elements are the same one (in fact aux == 9)
+
+
+					//if (this->Id() == 10792)
+					//{	
+					//	KRATOS_WATCH(NodesElem1[cont].Id())
+					//	KRATOS_WATCH(NodesElem1[cont].X0())
+					//	KRATOS_WATCH(NodesElem1[cont].Y0())
+		
+					//} 
 				}
 			}
 		} // End finding nodes
 
-		if (aux < 2) { std::cout << " Something wrong with the elements " << std::endl; }        // Must have at least 2 shared nodes
-		double length = 0;
+		//if (aux < 2) { std::cout << " Something wrong with the elements " << std::endl; }        // Must have at least 2 shared nodes
+		//double length = 0;
 
 		// Computation of the l_char
-		if (aux < 3) {                                                                           // It is not an edge element --> The 2 elements are not equal
-			length = pow((pow(Xcoord[0] - Xcoord[1], 2) + pow(Ycoord[0] - Ycoord[1], 2)), 0.5);  // Length of the edge between 2 elements
-			l_char = length;                                                                     // Currently the characteristic length is the edge length (can be modified)
+		if (aux < 3) 
+		{                                                                                        // It is not an edge element --> The 2 elements are not equal
+			l_char = pow((pow(Xcoord[0] - Xcoord[1], 2) + pow(Ycoord[0] - Ycoord[1], 2)), 0.5);  // Length of the edge between 2 elements
+			//l_char = length;                                                                   // Currently the characteristic length is the edge length (can be modified)
 		}
-		else {  // Edge Element
-			double ElementArea = NeibElement.GetGeometry().Area();
+		else  // Edge Element
+		{ 
+			double ElementArea = abs(this->GetGeometry().Area());
 			l_char = sqrt(4 * ElementArea / sqrt(3));   // Cervera's Formula
+
+			// if (this->Id() == 10792)
+			// {
+			// 	KRATOS_WATCH(ElementArea)
+			// 	KRATOS_WATCH(l_char)
+
+			// } 
 			
 		} // l_char computed
 

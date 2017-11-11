@@ -409,7 +409,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 				# test
 				
 				print("antes de imprimir")
-				Wait()
+				#Wait()
 				self.GraphicalOutputPrintOutput()	
 
 
@@ -427,8 +427,8 @@ class FEM_Solution(MainSolidFEM.Solution):
 		#print("tiempooo :", self.time)
 		#print(self.graphical_output.printed_step_count)
 		#print(self.graphical_output.step_count)
-		print("************************")
-		Wait()
+		#print("************************")
+		#Wait()
 
 
 
