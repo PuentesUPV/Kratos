@@ -106,29 +106,31 @@ class ApplyPeriodicConditionProcess : public Process
         ProcessInfoPointerType info = mr_model_part.pGetProcessInfo();
         int &dim = info->GetValue(DOMAIN_SIZE);
 
-        GetRotatedMaster<dim>(masterModelPart);
+        GetRotatedMaster<dim>(masterModelPart, mrRotatedMasterModelPart);
 
         KRATOS_CATCH("");
     }
 
     // Functions which use two variable components
     template <int TDim>
-    void GetRotatedMaster(ModelPart &master_model_part)
+    void GetRotatedMaster(ModelPart &master_model_part, ModelPart::Pointer rotatedMasterModelPart)
     {
-        BinBasedFastPointLocator<TDim> *p_point_locator = new BinBasedFastPointLocator<TDim>(master_model_part);
-        int numVars = m_parameters["variable_names"].size();
         // iterating over slave nodes to find the corresponding masters
-        const int n_slave_nodes = slave_model_part.Nodes().size();
-        array_1d<double, TDim + 1> N; // This is only for triangular meshes
-        const int max_results = 100;
-        typename BinBasedFastPointLocator<TDim>::ResultContainerType results(max_results);
+        const long int n_master_nodes = master_model_part.Nodes().size();
+        *mpRotatedMasterModelPart = master_model_part;
 
-        for (int i = 0; i < n_slave_nodes; i++)
+        for (int i = 0; i < n_master_nodes; i++)
         {
-            ModelPart::NodesContainerType::iterator iparticle = slave_model_part.NodesBegin() + i;
-            Node<3>::Pointer p_slave_node = *(iparticle.base());
-            typename BinBasedFastPointLocator<TDim>::ResultIteratorType result_begin = results.begin();
-            Element::Pointer pMasterElement;
+            ModelPart::NodesContainerType::iterator iparticle = master_model_part.NodesBegin() + i;
+            Node<3>::Pointer p_master_node = *(iparticle.base());
+            std::vector<double> masterNode = {p_master_node->X(), p_master_node->Y(), p_master_node->Z()};
+
+            std::vector<double> rotatedMasterNode = RotateNode(masterNode, mTheta);
+
+            node->X() = rotatedNode[0];
+            node->Y() = rotatedNode[1];
+            if (domain_size > 2)
+                node->Z() = rotatedNode[2];            
         }
     }
 
@@ -136,7 +138,7 @@ class ApplyPeriodicConditionProcess : public Process
     std::vector<std::vector<std::vector<double>>> vectorOfRotationMatrices;
     Parameters mParameters;
     ModelPart &mrMainModelPart;
-    ModelPart::Pointer *mrRotatedMasterModelPart; // This is new modelpart
+    ModelPart::Pointer *mpRotatedMasterModelPart; // This is new modelpart
     std::string mSlaveSubModelPartName;
     std::string mMasterSubModelPartName;
     double mTheta;
