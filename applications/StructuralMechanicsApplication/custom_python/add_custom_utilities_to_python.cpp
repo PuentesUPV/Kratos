@@ -29,6 +29,8 @@
 
 //Processes
 #include "custom_processes/apply_multi_point_constraints_process.h"
+//Processes
+#include "custom_processes/apply_periodic_conditon_process.h"
 
 
 namespace Kratos

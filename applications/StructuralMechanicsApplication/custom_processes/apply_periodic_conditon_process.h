@@ -26,6 +26,7 @@
 #include "utilities/math_utils.h"
 #include "includes/kratos_parameters.h"
 #include "utilities/binbased_fast_point_locator.h"
+#include "custom_processes/apply_multi_point_constraints_process.h"
 
 namespace Kratos
 {
@@ -51,7 +52,7 @@ class ApplyPeriodicConditionProcess : public Process
 
     /// Constructor.
     ApplyPeriodicConditionProcess(ModelPart &model_part,
-                                  Parameters rParameters) : Process(Flags()), mrMainModelPart(model_part), mParameters(rParameters)
+                                  Parameters rParameters) : Process(Flags()), mrMainModelPart(model_part), m_parameters(rParameters)
     {
 
         Parameters default_parameters(R"(
@@ -90,7 +91,9 @@ class ApplyPeriodicConditionProcess : public Process
             mAxisOfRoationVectorNormalized.push_back(mAxisOfRoationVector[d] / norm);
 
         mTheta = m_parameters["angle"].GetDouble();
-        mrRotatedMasterModelPart = ModelPart::Pointer(new ModelPart())
+        mpRotatedMasterModelPart = ModelPart::Pointer(new ModelPart("rotatedMaster"));
+
+        mpMpcProcess = ApplyMultipointConstraintsProcess::Pointer(new ApplyMultipointConstraintsProcess(mrMainModelPart, "periodicConditions"));
     }
     ~ApplyPeriodicConditionProcess()
     {
@@ -100,51 +103,67 @@ class ApplyPeriodicConditionProcess : public Process
     {
         KRATOS_TRY;
 
-        ModelPart &masterModelPart = mr_model_part.GetSubModelPart(m_parameters["master_sub_model_part_name"].GetString());
-        ModelPart &slaveModelPart = mr_model_part.GetSubModelPart(m_parameters["slave_sub_model_part_name"].GetString());
+        ModelPart &masterModelPart = mrMainModelPart.GetSubModelPart(m_parameters["master_sub_model_part_name"].GetString());
+        ModelPart &slaveModelPart = mrMainModelPart.GetSubModelPart(m_parameters["slave_sub_model_part_name"].GetString());
 
-        ProcessInfoPointerType info = mr_model_part.pGetProcessInfo();
-        int &dim = info->GetValue(DOMAIN_SIZE);
-
-        GetRotatedMaster<dim>(masterModelPart, mrRotatedMasterModelPart);
+        ProcessInfoPointerType info = mrMainModelPart.pGetProcessInfo();
+        int probDim = info->GetValue(DOMAIN_SIZE);
+        // Rotate the master so it goes to the slave
+        if (probDim == 2)
+        {
+            GetRotatedMaster<2>(masterModelPart);
+        }
+        else if (probDim == 3)
+        {
+            GetRotatedMaster<3>(masterModelPart);
+        }
+        // Once master and slave nodes are on the same surface we interpolate and appply constraints
+        ApplyConstraintsForPeriodicConditions();
 
         KRATOS_CATCH("");
     }
 
-    // Functions which use two variable components
-    template <int TDim>
-    void GetRotatedMaster(ModelPart &master_model_part, ModelPart::Pointer rotatedMasterModelPart)
-    {
-        // iterating over slave nodes to find the corresponding masters
-        const long int n_master_nodes = master_model_part.Nodes().size();
-        *mpRotatedMasterModelPart = master_model_part;
-
-        for (int i = 0; i < n_master_nodes; i++)
-        {
-            ModelPart::NodesContainerType::iterator iparticle = master_model_part.NodesBegin() + i;
-            Node<3>::Pointer p_master_node = *(iparticle.base());
-            std::vector<double> masterNode = {p_master_node->X(), p_master_node->Y(), p_master_node->Z()};
-
-            std::vector<double> rotatedMasterNode = RotateNode(masterNode, mTheta);
-
-            node->X() = rotatedNode[0];
-            node->Y() = rotatedNode[1];
-            if (domain_size > 2)
-                node->Z() = rotatedNode[2];            
-        }
-    }
-
   private:
-    std::vector<std::vector<std::vector<double>>> vectorOfRotationMatrices;
-    Parameters mParameters;
+    std::vector<std::vector<std::vector<double>>> mVectorOfRotationMatrices;
     ModelPart &mrMainModelPart;
-    ModelPart::Pointer *mpRotatedMasterModelPart; // This is new modelpart
+    Parameters m_parameters;
+    ModelPart::Pointer mpRotatedMasterModelPart; // This is new modelpart
     std::string mSlaveSubModelPartName;
     std::string mMasterSubModelPartName;
     double mTheta;
     std::vector<double> mCenterOfRotation;
     std::vector<double> mAxisOfRoationVector;
     std::vector<double> mAxisOfRoationVectorNormalized;
+    ApplyMultipointConstraintsProcess::Pointer mpMpcProcess;
+
+    ApplyConstraintsForPeriodicConditions()
+    {
+        
+    }
+
+    // Functions which use two variable components
+    template <int TDim>
+    void GetRotatedMaster(ModelPart &master_model_part)
+    {
+        // iterating over slave nodes to find thecorresponding masters
+        long int n_master_nodes = master_model_part.Nodes().size();
+        mVectorOfRotationMatrices.resize(n_master_nodes, std::vector<std::vector<double>>(3, std::vector<double>(3)));
+        *mpRotatedMasterModelPart = master_model_part;
+
+        for (int i = 0; i < n_master_nodes; i++)
+        {
+            ModelPart::NodesContainerType::iterator iparticle = (*mpRotatedMasterModelPart).NodesBegin() + i;
+            Node<3>::Pointer p_master_node = *(iparticle.base());
+            std::vector<double> masterNode = {p_master_node->X(), p_master_node->Y(), p_master_node->Z()};
+
+            std::vector<double> rotatedMasterNode = RotateNode(i, masterNode, mTheta);
+
+            p_master_node->X() = rotatedMasterNode[0];
+            p_master_node->Y() = rotatedMasterNode[1];
+            if (TDim > 2)
+                p_master_node->Z() = rotatedMasterNode[2];
+        }
+    }
 
     /*
      * Calculates the cross product of two vectors
@@ -161,7 +180,7 @@ class ApplyPeriodicConditionProcess : public Process
     /*
      * Rotates a given point(node_cords) in space around a given mAxisOfRoationVector by an angle thetha
      */
-    std::vector<double> RotateNode(std::vector<double> node_cords, double theta)
+    std::vector<double> RotateNode(long int index, std::vector<double> node_cords, double theta)
     {
         std::vector<double> rotatedNode(4);
         std::vector<double> U(3); // normalized axis of rotation
