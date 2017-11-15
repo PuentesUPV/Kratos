@@ -540,7 +540,7 @@ protected:
                 {
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it]/4;
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
-					pNewElementDimension[Elem_it] = 0.1*ElementDimension[Elem_it];
+					pNewElementDimension[Elem_it] = 0.25*ElementDimension[Elem_it];
                 }
                     
                 Elem_it += 1;

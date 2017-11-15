@@ -656,6 +656,7 @@ protected:
                     //KRATOS_WATCH(GPIsInside)
 
                     std::string flag = "any_nodes_is_in";
+					//std::string flag = "GP_is_in";
 
                     // check
                     if (flag == "GP_is_in")
@@ -677,7 +678,8 @@ protected:
     
                         if (condition_is_active == false) // the inactive old elements have damage 0
                         {
-                            Damage[j] = 0.97;
+                            Damage[j] = 0.95;
+							Threshold[j] = Other->GetValue(INITIAL_THRESHOLD);
                         }
                         if (condition_is_active == false && GPIsInside == true)
                         {
@@ -699,18 +701,18 @@ protected:
     
                         if (condition_is_active == false) // the inactive old elements have damage 0
                         {
-                            Damage[j] = 0.97;
+                            Damage[j] = 0.95;
 							Threshold[j] = Other->GetValue(INITIAL_THRESHOLD);
                         }
-
+						int num_nodes = 0;
                         for (int node = 0; node < 3; node++)
                         {
                             PointNodeGlobalCoordinates = Me->GetGeometry()[node].Coordinates();
                             any_node_is_inside =  Other->GetGeometry().IsInside(PointNodeGlobalCoordinates,PointNodeLocalCoordinates);
-                            if (any_node_is_inside == true) break;
+                            if (any_node_is_inside == true) num_nodes++;
                         }
 
-                        if (condition_is_active == false && any_node_is_inside == true)
+                        if (condition_is_active == false && num_nodes >= 1)
                         {
                             Me->Set(ACTIVE, false);
                         }

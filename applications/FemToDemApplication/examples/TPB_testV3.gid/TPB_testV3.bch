@@ -1,0 +1,15 @@
+Mescape Files Read
+D:\FemDem\applications\FemToDemApplication\examples\TPB_testV3.gid
+Mescape Meshing AssignSizes BackgMesh
+Yes
+escape
+Mescape Meshing AssignSizes BackgMesh
+D:\FemDem\applications\FemToDemApplication\examples\TPB_testV3.gid\TPB_testV3.bgm
+Mescape Meshing Generate
+Yes
+0.0230902 MeshingParametersFrom=Preferences
+Mescape Meshing MeshView
+Mescape Utilities Calculate
+Mescape Files WriteCalcFile
+escape escape escape escape escape Quit
+No

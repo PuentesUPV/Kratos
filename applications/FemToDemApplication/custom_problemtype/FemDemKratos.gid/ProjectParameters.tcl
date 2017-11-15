@@ -71,7 +71,9 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
     } else {
     AppendGroupNames PutStrings Body_Part
     }
-    
+	# try
+    set PutStrings [string trimright $PutStrings ,]
+	
     append PutStrings \]
     puts $FileVar "        \"problem_domain_sub_model_part_list\": $PutStrings,"
    
