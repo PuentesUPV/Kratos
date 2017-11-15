@@ -93,7 +93,15 @@ class ApplyPeriodicConditionProcess : public Process
         mTheta = m_parameters["angle"].GetDouble();
         mpRotatedMasterModelPart = ModelPart::Pointer(new ModelPart("rotatedMaster"));
 
+        mRotationMatrix.resize(4);
+        for (auto &it : mRotationMatrix)
+        {
+            it.resize(4);
+        }
+
         mpMpcProcess = ApplyMultipointConstraintsProcess::Pointer(new ApplyMultipointConstraintsProcess(mrMainModelPart, "periodicConditions"));
+
+        CalculateRoatationMatrix();
     }
     ~ApplyPeriodicConditionProcess()
     {
@@ -104,7 +112,6 @@ class ApplyPeriodicConditionProcess : public Process
         KRATOS_TRY;
 
         ModelPart &masterModelPart = mrMainModelPart.GetSubModelPart(m_parameters["master_sub_model_part_name"].GetString());
-        ModelPart &slaveModelPart = mrMainModelPart.GetSubModelPart(m_parameters["slave_sub_model_part_name"].GetString());
 
         ProcessInfoPointerType info = mrMainModelPart.pGetProcessInfo();
         int probDim = info->GetValue(DOMAIN_SIZE);
@@ -117,14 +124,24 @@ class ApplyPeriodicConditionProcess : public Process
         {
             GetRotatedMaster<3>(masterModelPart);
         }
+
+
+        if (probDim == 2)
+        {
+             ApplyConstraintsForPeriodicConditions<2>();
+        }
+        else if (probDim == 3)
+        {
+             ApplyConstraintsForPeriodicConditions<3>();
+        }        
         // Once master and slave nodes are on the same surface we interpolate and appply constraints
-        ApplyConstraintsForPeriodicConditions();
+       
 
         KRATOS_CATCH("");
     }
 
   private:
-    std::vector<std::vector<std::vector<double>>> mVectorOfRotationMatrices;
+    std::vector<std::vector<double>> mRotationMatrix;
     ModelPart &mrMainModelPart;
     Parameters m_parameters;
     ModelPart::Pointer mpRotatedMasterModelPart; // This is new modelpart
@@ -136,9 +153,50 @@ class ApplyPeriodicConditionProcess : public Process
     std::vector<double> mAxisOfRoationVectorNormalized;
     ApplyMultipointConstraintsProcess::Pointer mpMpcProcess;
 
-    ApplyConstraintsForPeriodicConditions()
+    template <int TDim>
+    void ApplyConstraintsForPeriodicConditions()
     {
-        
+
+        ModelPart &slaveModelPart = mrMainModelPart.GetSubModelPart(m_parameters["slave_sub_model_part_name"].GetString());
+        BinBasedFastPointLocator<TDim> *p_point_locator = new BinBasedFastPointLocator<TDim>(*mpRotatedMasterModelPart);
+        int numVars = m_parameters["variable_names"].size();
+        // iterating over slave nodes to find the corresponding masters
+        const int n_slave_nodes = slaveModelPart.Nodes().size();
+        array_1d<double, TDim + 1> N; // This is only for triangular meshes
+        const int max_results = 100;
+        typename BinBasedFastPointLocator<TDim>::ResultContainerType results(max_results);
+
+        for (int i = 0; i < n_slave_nodes; i++)
+        {
+            ModelPart::NodesContainerType::iterator iparticle = slave_model_part.NodesBegin() + i;
+            Node<3>::Pointer p_slave_node = *(iparticle.base());
+            typename BinBasedFastPointLocator<TDim>::ResultIteratorType result_begin = results.begin();
+            Element::Pointer pMasterElement;
+            bool is_found = false;
+            is_found = p_point_locator->FindPointOnMesh(p_slave_node->Coordinates(), N, pMasterElement, result_begin, max_results);
+            if (is_found == true)
+            {
+                for (int i = 0; i < numVars; i++)
+                {
+                    std::string varName = m_parameters["variable_names"][i].GetString();
+                    Geometry<Node<3>> &geom = pMasterElement->GetGeometry();
+                    for (unsigned int i = 0; i < geom.size(); i++)
+                    {
+                        if (KratosComponents<Variable<double>>::Has(varName))
+                        { //case of double variable
+                            VariableType rVar = KratosComponents<Variable<double>>::Get(m_parameters["variable_names"][i].GetString());
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariable(geom[i], rVar, *p_slave_node, rVar, N[i], 0.0);
+                        }
+                        else if (KratosComponents<VariableComponent<VectorComponentAdaptor<array_1d<double, 3>>>>::Has(varName))
+                        {
+                            VariableComponentType rVar = KratosComponents<VariableComponentType>::Get(m_parameters["variable_names"][i].GetString());
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVar, *p_slave_node, rVar, N[i], 0.0);
+                        }
+                    }
+                }
+            }
+        }
+        delete p_point_locator;
     }
 
     // Functions which use two variable components
@@ -147,7 +205,6 @@ class ApplyPeriodicConditionProcess : public Process
     {
         // iterating over slave nodes to find thecorresponding masters
         long int n_master_nodes = master_model_part.Nodes().size();
-        mVectorOfRotationMatrices.resize(n_master_nodes, std::vector<std::vector<double>>(3, std::vector<double>(3)));
         *mpRotatedMasterModelPart = master_model_part;
 
         for (int i = 0; i < n_master_nodes; i++)
@@ -177,16 +234,9 @@ class ApplyPeriodicConditionProcess : public Process
         c[2] = a[0] * b[1] - a[1] * b[0];
     }
 
-    /*
-     * Rotates a given point(node_cords) in space around a given mAxisOfRoationVector by an angle thetha
-     */
-    std::vector<double> RotateNode(long int index, std::vector<double> node_cords, double theta)
-    {
-        std::vector<double> rotatedNode(4);
-        std::vector<double> U(3); // normalized axis of rotation
-        node_cords.push_back(1.0);
+    void CalculateRoatationMatrix(){
 
-        //std::cout<<"############## HERE"<<std::endl;
+        std::vector<double> U(3); // normalized axis of rotation
         // normalizing the axis of roatation
         double norm = 0.0;
         for (unsigned int d = 0; d < 3; ++d)
@@ -196,7 +246,6 @@ class ApplyPeriodicConditionProcess : public Process
             U[d] = mAxisOfRoationVector[d] / norm;
 
         // Constructing the transformation matrix
-        double A0[4][4];
         double x1 = mCenterOfRotation[0];
         double y1 = mCenterOfRotation[1];
         double z1 = mCenterOfRotation[2];
@@ -205,8 +254,8 @@ class ApplyPeriodicConditionProcess : public Process
         double b = U[1];
         double c = U[2];
 
-        double t2 = cos(theta);
-        double t3 = sin(theta);
+        double t2 = cos(mTheta);
+        double t3 = sin(mTheta);
         double t4 = a * a;
         double t5 = b * b;
         double t6 = c * c;
@@ -218,31 +267,40 @@ class ApplyPeriodicConditionProcess : public Process
         double t12 = a * t3 * t5;
         double t13 = a * t3 * t6;
         double t14 = b * c * t2;
-        A0[0][0] = t4 + t2 * t8;
-        A0[0][1] = t7 - c * t3 - a * b * t2;
-        A0[0][2] = t10 + t11 - a * c * t2;
-        A0[0][3] = x1 - t4 * x1 - a * b * y1 - a * c * z1 - b * t3 * z1 + c * t3 * y1 - t2 * t5 * x1 - t2 * t6 * x1 + a * b * t2 * y1 + a * c * t2 * z1;
-        A0[1][0] = t7 + c * t3 - a * b * t2;
-        A0[1][1] = t9 * (t2 * t6 + t5 * t8 + t2 * t4 * t5);
-        A0[1][2] = -t9 * (t12 + t13 + t14 - b * c * t8 - b * c * t2 * t4);
-        A0[1][3] = -t9 * (-t8 * y1 + t2 * t6 * y1 + t5 * t8 * y1 + a * b * t8 * x1 - b * c * t2 * z1 + b * c * t8 * z1 - a * t3 * t5 * z1 - a * t3 * t6 * z1 + c * t3 * t8 * x1 + t2 * t4 * t5 * y1 - a * b * t2 * t8 * x1 + b * c * t2 * t4 * z1);
-        A0[2][0] = t10 - t11 - a * c * t2;
-        A0[2][1] = t9 * (t12 + t13 - t14 + b * c * t8 + b * c * t2 * t4);
-        A0[2][2] = t9 * (t2 * t5 + t6 * t8 + t2 * t4 * t6);
-        A0[2][3] = -t9 * (-t8 * z1 + t2 * t5 * z1 + t6 * t8 * z1 + a * c * t8 * x1 - b * c * t2 * y1 + b * c * t8 * y1 + a * t3 * t5 * y1 + a * t3 * t6 * y1 - b * t3 * t8 * x1 + t2 * t4 * t6 * z1 - a * c * t2 * t8 * x1 + b * c * t2 * t4 * y1);
-        A0[3][3] = 1.0;
+        mRotationMatrix[0][0] = t4 + t2 * t8;
+        mRotationMatrix[0][1] = t7 - c * t3 - a * b * t2;
+        mRotationMatrix[0][2] = t10 + t11 - a * c * t2;
+        mRotationMatrix[0][3] = x1 - t4 * x1 - a * b * y1 - a * c * z1 - b * t3 * z1 + c * t3 * y1 - t2 * t5 * x1 - t2 * t6 * x1 + a * b * t2 * y1 + a * c * t2 * z1;
+        mRotationMatrix[1][0] = t7 + c * t3 - a * b * t2;
+        mRotationMatrix[1][1] = t9 * (t2 * t6 + t5 * t8 + t2 * t4 * t5);
+        mRotationMatrix[1][2] = -t9 * (t12 + t13 + t14 - b * c * t8 - b * c * t2 * t4);
+        mRotationMatrix[1][3] = -t9 * (-t8 * y1 + t2 * t6 * y1 + t5 * t8 * y1 + a * b * t8 * x1 - b * c * t2 * z1 + b * c * t8 * z1 - a * t3 * t5 * z1 - a * t3 * t6 * z1 + c * t3 * t8 * x1 + t2 * t4 * t5 * y1 - a * b * t2 * t8 * x1 + b * c * t2 * t4 * z1);
+        mRotationMatrix[2][0] = t10 - t11 - a * c * t2;
+        mRotationMatrix[2][1] = t9 * (t12 + t13 - t14 + b * c * t8 + b * c * t2 * t4);
+        mRotationMatrix[2][2] = t9 * (t2 * t5 + t6 * t8 + t2 * t4 * t6);
+        mRotationMatrix[2][3] = -t9 * (-t8 * z1 + t2 * t5 * z1 + t6 * t8 * z1 + a * c * t8 * x1 - b * c * t2 * y1 + b * c * t8 * y1 + a * t3 * t5 * y1 + a * t3 * t6 * y1 - b * t3 * t8 * x1 + t2 * t4 * t6 * z1 - a * c * t2 * t8 * x1 + b * c * t2 * t4 * y1);
+        mRotationMatrix[3][3] = 1.0;
+    }
+
+    /*
+     * Rotates a given point(node_cords) in space around a given mAxisOfRoationVector by an angle thetha
+     */
+    std::vector<double> RotateNode(long int index, std::vector<double> node_cords, double theta)
+    {
+        std::vector<double> rotatedNode(4);
 
         // Multiplying the point to get the rotated point
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                rotatedNode[i] += (A0[i][j] * node_cords[j]);
+                rotatedNode[i] += (mRotationMatrix[i][j] * node_cords[j]);
             }
         }
 
         return rotatedNode;
     }
+
 };
 }
 
