@@ -87,7 +87,7 @@ namespace Kratos
 	{
 
 		// After the mapping, the thresholds of the edges ( are equal to 0.0) are imposed equal to the IP threshold
-		double *thresholds      = this->GetThresholds();
+		Vector thresholds = this->GetThresholds();
 		double ElementThreshold = this->GetValue(STRESS_THRESHOLD);
 		
 		if (thresholds[0] == 0.0 && thresholds[1] == 0.0 && thresholds[2] == 0.0)
@@ -105,7 +105,7 @@ namespace Kratos
 		}
 
 		// IDEM with the edge damages
-		double *DamageEdges   = this->GetDamages();
+		Vector DamageEdges   = this->GetDamages();
 		double DamageElement  = this->GetValue(DAMAGE_ELEMENT);
 
 		if (DamageEdges[0] == 0.0 && DamageEdges[1] == 0.0 && DamageEdges[2] == 0.0)
@@ -114,6 +114,9 @@ namespace Kratos
 			this->Set_Convergeddamages(DamageElement, 1);
 			this->Set_Convergeddamages(DamageElement, 2);
 		}
+
+		//delete DamageEdges;
+		//delete thresholds;
 
 		//if (this->Id() == 2 | this->Id() == 10)
 		//{
@@ -168,7 +171,7 @@ namespace Kratos
 		this->SetToZeroIteration();
 
 		// computation of the equivalent damage threshold and damage of the element for AMR mapping
-		double *thresholds = this->GetThresholds();
+		Vector thresholds = this->GetThresholds();
 		
 		//KRATOS_WATCH(thresholds[0])
 

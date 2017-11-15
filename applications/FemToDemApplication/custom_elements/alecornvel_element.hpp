@@ -113,8 +113,8 @@ namespace Kratos
 		void   Set_threshold(double af, int cont) { mThresholds[cont] = af; }
 		double Get_threshold(int cont) { return mThresholds[cont]; }
 
-		double* GetThresholds() { return mThresholds; }
-		double* GetDamages() { return mDamages; }
+		Vector GetThresholds() { return mThresholds; }
+		Vector GetDamages() { return mDamages; }
 
 		void   Set_threshold(double af) { mThreshold = af; }
 		double Get_threshold() { return mThreshold; }
@@ -202,22 +202,22 @@ namespace Kratos
 		int iteration = 0;
 
 		// Each component == Each edge
-		double mF_sigmas[3] = { 0.0, 0.0, 0.0 };   // Mohr-Coulomb equivalent stress
-		double mThresholds[3] = { 0.0, 0.0, 0.0 };   // Stress mThreshold on edge
+		Vector mF_sigmas = ZeroVector(3);   // Mohr-Coulomb equivalent stress
+		Vector mThresholds = ZeroVector(3);   // Stress mThreshold on edge
 
 		double mThreshold = 0.0;
 		double mF_sigma   = 0.0;
 
-		double mDamages[3] = { 0.0, 0.0, 0.0 };     // Converged mDamage on each edge
+		Vector mDamages = ZeroVector(3);     // Converged mDamage on each edge
 		double mDamage = 0.0;                            // Converged mDamage
 
-		double mNonConvergedDamages[3] = { 0.0, 0.0, 0.0 };    // mDamages on edges of "i" iteration
-		double mNonConvergedFsigmas[3]  = { 0.0, 0.0, 0.0 };   // Equivalent stress of "i" iteration
+		Vector mNonConvergedDamages = ZeroVector(3);    // mDamages on edges of "i" iteration
+		Vector mNonConvergedFsigmas  = ZeroVector(3);   // Equivalent stress of "i" iteration
 
 		double mNonConvergedFsigma = 0.0;
 		double mNonConvergedDamage = 0.0;       // mDamage of the element of "i" iteration
 
-		double mL_char[3] = { 0.0, 0.0, 0.0 };  // Characteristic length on each edge
+		Vector mL_char = ZeroVector(3);  // Characteristic length on each edge
 
 		Vector mStressVector = ZeroVector(3);
 		Vector mStrainVector = ZeroVector(3);

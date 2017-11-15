@@ -767,28 +767,35 @@ protected:
 				// 	//KRATOS_WATCH(Threshold[1])
 				// 	KRATOS_WATCH(Threshold[2])
 				//  }
-
-
-				MinDistance = Distance[0];
-                damage      = Damage[0];
-                threshold   = Threshold[0];
-				//KRATOS_WATCH(damage)
-
-                // Select the closest point old element
-                for (int elem = 1; elem < pGaussPointOldMatrix[Row][Column].GaussPointOldVector.size(); elem++)
+                bool condition_is_active = true;
+                if ((Me)->IsDefined(ACTIVE))
                 {
-                    if (Distance[elem] < MinDistance)
-                    {
-						MinDistance = Distance[elem];
-                        damage      = Damage[elem];
-                        threshold   = Threshold[elem];
-                    }
+                    condition_is_active = (Me)->Is(ACTIVE);
                 }
 
-				// Set GP values
-                Me->SetValue(DAMAGE_ELEMENT, damage);
-                Me->SetValue(STRESS_THRESHOLD, threshold);
+                if (condition_is_active)
+                {
+                    MinDistance = Distance[0];
+                    damage      = Damage[0];
+                    threshold   = Threshold[0];
+                    //KRATOS_WATCH(damage)
 
+                    // Select the closest point old element
+                    for (int elem = 1; elem < pGaussPointOldMatrix[Row][Column].GaussPointOldVector.size(); elem++)
+                    {
+                        if (Distance[elem] < MinDistance)
+                        {
+                            MinDistance = Distance[elem];
+                            damage      = Damage[elem];
+                            threshold   = Threshold[elem];
+                        }
+                    }
+
+                    // Set GP values
+                    Me->SetValue(DAMAGE_ELEMENT, damage);
+                    Me->SetValue(STRESS_THRESHOLD, threshold);
+
+                }
 
 
                 delete[] Distance;
