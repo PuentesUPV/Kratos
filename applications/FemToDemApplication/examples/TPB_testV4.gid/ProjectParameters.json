@@ -1,10 +1,10 @@
 {
    "AMR_data": {
-        "activate_AMR":                    false,
+        "activate_AMR":                    true,
         "plane_state":                    "Plane_Stress",
         "mesh_optimality_criteria":       "Global_Error_Equidistribution",
         "permissible_error":               0.09,
-        "refinement_frequency":            3.0,
+        "refinement_frequency":            5.0,
         "Mapping_Procedure":              "Closest_Point_Transfer",
         "gid_path":                       "D:\\Program Files (x86)\\GiD 13.1.8d\\gid.exe"
     },
@@ -13,7 +13,7 @@
         "model_part_name":      "Structure",
         "domain_size":          2,
         "start_time":           0.0,
-        "end_time":             20.0,
+        "end_time":             30.0,
         "time_step":            0.05,
         "echo_level":           1
     },

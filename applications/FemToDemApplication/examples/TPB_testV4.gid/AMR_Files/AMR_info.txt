@@ -1,0 +1,4 @@
+Mesh: 5
+Number of elements: 14832
+Global Refinement Parameter: 1.39795
+------------------------------------------------------------------
