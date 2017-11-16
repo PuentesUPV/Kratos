@@ -125,17 +125,15 @@ class ApplyPeriodicConditionProcess : public Process
             GetRotatedMaster<3>(masterModelPart);
         }
 
-
         if (probDim == 2)
         {
-             ApplyConstraintsForPeriodicConditions<2>();
+            ApplyConstraintsForPeriodicConditions<2>();
         }
         else if (probDim == 3)
         {
-             ApplyConstraintsForPeriodicConditions<3>();
-        }        
+            ApplyConstraintsForPeriodicConditions<3>();
+        }
         // Once master and slave nodes are on the same surface we interpolate and appply constraints
-       
 
         KRATOS_CATCH("");
     }
@@ -156,9 +154,11 @@ class ApplyPeriodicConditionProcess : public Process
     template <int TDim>
     void ApplyConstraintsForPeriodicConditions()
     {
-
+        std::cout << "Applying periodic boundary conditions in :: " << TDim << " directions " << std::endl;
+        std::cout << "rotated model part :: " << (*mpRotatedMasterModelPart) << std::endl;
         ModelPart &slaveModelPart = mrMainModelPart.GetSubModelPart(m_parameters["slave_sub_model_part_name"].GetString());
         BinBasedFastPointLocator<TDim> *p_point_locator = new BinBasedFastPointLocator<TDim>(*mpRotatedMasterModelPart);
+        (*p_point_locator).UpdateSearchDatabase();
         int numVars = m_parameters["variable_names"].size();
         // iterating over slave nodes to find the corresponding masters
         const int n_slave_nodes = slaveModelPart.Nodes().size();
@@ -168,29 +168,58 @@ class ApplyPeriodicConditionProcess : public Process
 
         for (int i = 0; i < n_slave_nodes; i++)
         {
-            ModelPart::NodesContainerType::iterator iparticle = slave_model_part.NodesBegin() + i;
+            ModelPart::NodesContainerType::iterator iparticle = slaveModelPart.NodesBegin() + i;
             Node<3>::Pointer p_slave_node = *(iparticle.base());
+            std::cout << "Slave node :: " << (*p_slave_node).Coordinates() << std::endl;
             typename BinBasedFastPointLocator<TDim>::ResultIteratorType result_begin = results.begin();
             Element::Pointer pMasterElement;
             bool is_found = false;
+            if (p_point_locator == nullptr)
+            {
+                std::cout << "Point locator not initialized properly initialized " << std::endl;
+                exit(-1);
+            }
             is_found = p_point_locator->FindPointOnMesh(p_slave_node->Coordinates(), N, pMasterElement, result_begin, max_results);
             if (is_found == true)
             {
                 for (int i = 0; i < numVars; i++)
                 {
                     std::string varName = m_parameters["variable_names"][i].GetString();
-                    Geometry<Node<3>> &geom = pMasterElement->GetGeometry();
-                    for (unsigned int i = 0; i < geom.size(); i++)
+                    if (KratosComponents<Variable<array_1d<double, 3>>>::Has(varName))
                     {
-                        if (KratosComponents<Variable<double>>::Has(varName))
-                        { //case of double variable
-                            VariableType rVar = KratosComponents<Variable<double>>::Get(m_parameters["variable_names"][i].GetString());
-                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariable(geom[i], rVar, *p_slave_node, rVar, N[i], 0.0);
-                        }
-                        else if (KratosComponents<VariableComponent<VectorComponentAdaptor<array_1d<double, 3>>>>::Has(varName))
+
+                        VariableComponentType rVarXSlave = KratosComponents<VariableComponentType>::Get(varName + std::string("_X"));
+                        VariableComponentType rVarYSlave = KratosComponents<VariableComponentType>::Get(varName + std::string("_Y"));
+                        VariableComponentType rVarZSlave = KratosComponents<VariableComponentType>::Get(varName + std::string("_Z"));
+
+                        VariableComponentType rVarXMaser = KratosComponents<VariableComponentType>::Get(m_parameters["variable_names"][i].GetString() + "_X");
+                        VariableComponentType rVarYMaser = KratosComponents<VariableComponentType>::Get(m_parameters["variable_names"][i].GetString() + "_Y");
+                        VariableComponentType rVarZMaser = KratosComponents<VariableComponentType>::Get(m_parameters["variable_names"][i].GetString() + "_Z");
+
+                        Geometry<Node<3>> &geom = pMasterElement->GetGeometry();
+                        for (unsigned int i = 0; i < geom.size(); i++)
                         {
-                            VariableComponentType rVar = KratosComponents<VariableComponentType>::Get(m_parameters["variable_names"][i].GetString());
-                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVar, *p_slave_node, rVar, N[i], 0.0);
+
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarXMaser, *p_slave_node, rVarXSlave, N[i] * mRotationMatrix[0][0], 0.0);
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarYMaser, *p_slave_node, rVarXSlave, N[i] * mRotationMatrix[0][1], 0.0);
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarZMaser, *p_slave_node, rVarXSlave, N[i] * mRotationMatrix[0][2], 0.0);
+                        }
+
+                        for (unsigned int i = 0; i < geom.size(); i++)
+                        {
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarXMaser, *p_slave_node, rVarYSlave, N[i] * mRotationMatrix[1][0], 0.0);
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarYMaser, *p_slave_node, rVarYSlave, N[i] * mRotationMatrix[1][1], 0.0);
+                            mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarZMaser, *p_slave_node, rVarYSlave, N[i] * mRotationMatrix[1][2], 0.0);
+                        }
+
+                        if (TDim == 3)
+                        {
+                            for (unsigned int i = 0; i < geom.size(); i++)
+                            {
+                                mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarXMaser, *p_slave_node, rVarZSlave, N[i] * mRotationMatrix[2][0], 0.0);
+                                mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarYMaser, *p_slave_node, rVarZSlave, N[i] * mRotationMatrix[2][1], 0.0);
+                                mpMpcProcess->AddMasterSlaveRelationWithNodesAndVariableComponents(geom[i], rVarZMaser, *p_slave_node, rVarZSlave, N[i] * mRotationMatrix[2][2], 0.0);
+                            }
                         }
                     }
                 }
@@ -205,7 +234,24 @@ class ApplyPeriodicConditionProcess : public Process
     {
         // iterating over slave nodes to find thecorresponding masters
         long int n_master_nodes = master_model_part.Nodes().size();
-        *mpRotatedMasterModelPart = master_model_part;
+        for (int i = 0; i < n_master_nodes; i++)
+        {
+            ModelPart::NodesContainerType::iterator iparticle = (master_model_part).NodesBegin() + i;
+            Node<3>::Pointer pnode = *(iparticle.base());
+            (*mpRotatedMasterModelPart).CreateNewNode(pnode->Id(), *pnode);
+        }
+
+        // iterating over slave nodes to find thecorresponding masters
+        long int n_master_elem = master_model_part.Elements().size();
+        for (int i = 0; i < n_master_elem; i++)
+        {
+            ModelPart::ElementsContainerType::iterator iparticle = (master_model_part).Elements() + i;
+            Element::Pointer pElem = *(iparticle.base());
+            (*mpRotatedMasterModelPart).CreateNewElement("Element2D2N",pElem->Id(), *pnode);
+        }
+
+
+        //(*mpRotatedMasterModelPart).AddElements((master_model_part).ElementsBegin(), (master_model_part).ElementsEnd());
 
         for (int i = 0; i < n_master_nodes; i++)
         {
@@ -234,7 +280,8 @@ class ApplyPeriodicConditionProcess : public Process
         c[2] = a[0] * b[1] - a[1] * b[0];
     }
 
-    void CalculateRoatationMatrix(){
+    void CalculateRoatationMatrix()
+    {
 
         std::vector<double> U(3); // normalized axis of rotation
         // normalizing the axis of roatation
@@ -300,7 +347,6 @@ class ApplyPeriodicConditionProcess : public Process
 
         return rotatedNode;
     }
-
 };
 }
 
