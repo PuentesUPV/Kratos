@@ -534,12 +534,26 @@ protected:
                 if (condition_is_active)
                 {
                     pElementRefinementParameter[Elem_it] = pow(GlobalError/(mpermissible_error*GlobalStrainEnergy),1/m_coef)*pow(sqrt(mNElements)*ElementError[Elem_it]/GlobalError,1/q_coef);
+
+                    if (damage > 0.0 && pElementRefinementParameter[Elem_it] < 1.0)
+                    {
+						//KRATOS_WATCH(pElementRefinementParameter[Elem_it])
+                        pElementRefinementParameter[Elem_it] == 1.0; // to maintain the crack width
+      //                  KRATOS_WATCH((*it)->Id())
+      //                  KRATOS_WATCH(damage)
+						//KRATOS_WATCH(damage)
+                    } 
+
                     pNewElementDimension[Elem_it] =  ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
+
+
                 }
-                else
+                else // Inactive
                 {
+                    //pElementRefinementParameter[Elem_it] == 4.0;
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it]/4;
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
+					//pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
 					pNewElementDimension[Elem_it] = 0.25*ElementDimension[Elem_it];
                 }
                     
@@ -552,7 +566,8 @@ protected:
             {
                 pElementRefinementParameter[Elem_it] = pow(ElementError[Elem_it]/(mpermissible_error*GlobalStrainEnergy)*
                                                   sqrt(TotalArea/((*it)->GetGeometry().Area())),1/m_coef);
-        
+                
+                               
                 pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
                 Elem_it += 1;
             }
@@ -568,7 +583,7 @@ protected:
     {
         std::string eletyp;
 
-        if((*(mr_model_part.Elements().ptr_begin()))->GetGeometry().PointsNumber()==3)//Only one type of element (triangle or quadrilateral)
+        if((*(mr_model_part.Elements().ptr_begin()))->GetGeometry().PointsNumber()==3) //Only one type of element (triangle or quadrilateral)
             eletyp = "Triangle";
         else
             eletyp = "Tetrahedra"; // TODO: this means Quadrilateral (bug)

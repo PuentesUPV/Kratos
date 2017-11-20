@@ -951,6 +951,8 @@ namespace Kratos
 
 		CurrentElement->Set_l_char(l_char, cont);  // Storages the l_char of this side
 		CurrentElement->IterationPlus();
+
+		return 0.0;
 	}
 
 
