@@ -11,7 +11,7 @@ QUESTION: End_Time
 VALUE: 30.0
 HELP: Units in IS: s
 QUESTION: Delta_Time
-VALUE: 0.05
+VALUE: 0.01
 HELP: Units in IS: s
 QUESTION: Echo_Level
 VALUE: 1
@@ -29,7 +29,7 @@ VALUE: Global_Error_Equidistribution
 QUESTION: Permissible_Error
 VALUE: 0.09
 QUESTION: Refinement_Frequency
-VALUE: 5.0
+VALUE: 3.6
 HELP: In seconds
 QUESTION: Mapping_Procedure#CB#(Closest_Point_Transfer,Non_Local_Average)
 VALUE: Closest_Point_Transfer
@@ -64,7 +64,7 @@ VALUE: 1.0E-4
 QUESTION: Displacement_Absolute_Tolerance
 VALUE: 1.0E-9
 QUESTION: Residual_Relative_Tolerance
-VALUE: 1.0E-2
+VALUE: 1.0E-3
 QUESTION: Residual_Absolute_Tolerance
 VALUE: 1.0E-9
 QUESTION: Max_Iterations
@@ -123,7 +123,7 @@ VALUE: step
 QUESTION: Output_control_type#CB#(step,time)
 VALUE: step
 QUESTION: Output_frequency
-VALUE: 2
+VALUE: 5
 QUESTION: Body_output#CB#(true,false)
 VALUE: true
 QUESTION: Node_output#CB#(true,false)

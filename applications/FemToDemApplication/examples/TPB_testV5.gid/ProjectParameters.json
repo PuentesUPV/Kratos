@@ -4,7 +4,7 @@
         "plane_state":                    "Plane_Stress",
         "mesh_optimality_criteria":       "Global_Error_Equidistribution",
         "permissible_error":               0.09,
-        "refinement_frequency":            5.0,
+        "refinement_frequency":            3.6,
         "Mapping_Procedure":              "Closest_Point_Transfer",
         "gid_path":                       "D:\\Program Files (x86)\\GiD 13.1.8d\\gid.exe"
     },
@@ -14,7 +14,7 @@
         "domain_size":          2,
         "start_time":           0.0,
         "end_time":             30.0,
-        "time_step":            0.05,
+        "time_step":            0.01,
         "echo_level":           1
     },
    "solver_settings": {
@@ -32,7 +32,7 @@
             "convergence_criterion":               "Residual_criterion",
             "displacement_relative_tolerance":      1.0E-4,
             "displacement_absolute_tolerance":      1.0E-9,
-            "residual_relative_tolerance":          1.0E-2,
+            "residual_relative_tolerance":          1.0E-3,
             "residual_absolute_tolerance":          1.0E-9,
             "max_iteration":                        25,
             "linear_solver_settings":     {
@@ -76,7 +76,7 @@
             },
             "file_label":          "step",
             "output_control_type": "step",
-            "output_frequency":     2,
+            "output_frequency":     5,
             "body_output":          true,
             "node_output":          false,
             "skin_output":          false,

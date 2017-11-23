@@ -410,6 +410,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 				
 				print("antes de imprimir")
 				#Wait()
+				# just to to see what's has been mapped
 				self.GraphicalOutputPrintOutput()	
 
 

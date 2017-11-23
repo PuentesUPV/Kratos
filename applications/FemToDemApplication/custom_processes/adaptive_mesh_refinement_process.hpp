@@ -538,9 +538,9 @@ protected:
                     if (damage > 0.0 && pElementRefinementParameter[Elem_it] < 1.0)
                     {
 						//KRATOS_WATCH(pElementRefinementParameter[Elem_it])
-                        pElementRefinementParameter[Elem_it] == 1.0; // to maintain the crack width
-      //                  KRATOS_WATCH((*it)->Id())
-      //                  KRATOS_WATCH(damage)
+                        pElementRefinementParameter[Elem_it] = 1.0; // to maintain the crack width
+                        //KRATOS_WATCH((*it)->Id())
+                        //KRATOS_WATCH(damage)
 						//KRATOS_WATCH(damage)
                     } 
 
@@ -554,7 +554,7 @@ protected:
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it]/4;
                     //pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
 					//pNewElementDimension[Elem_it] = ElementDimension[Elem_it] / pElementRefinementParameter[Elem_it];
-					pNewElementDimension[Elem_it] = 0.25*ElementDimension[Elem_it];
+					pNewElementDimension[Elem_it] = 0.1*ElementDimension[Elem_it];
                 }
                     
                 Elem_it += 1;

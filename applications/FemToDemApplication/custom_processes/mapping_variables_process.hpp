@@ -402,8 +402,8 @@ protected:
         //double RowSize = (Y_max - Y_min) / NRows;
         //double ColumnSize = (X_max - X_min) / NColumns;
 
-		int NRows    = int((Y_max - Y_min) / (10 * mAverageElementLength));
-		int NColumns = int((X_max - X_min) / (10 * mAverageElementLength));
+		int NRows    = int((Y_max - Y_min) / (25.1 * mAverageElementLength));
+		int NColumns = int((X_max - X_min) / (25.1 * mAverageElementLength));
 
 		double RowSize = (Y_max - Y_min) / NRows;
 		double ColumnSize = (X_max - X_min) / NColumns;
@@ -658,7 +658,6 @@ protected:
                     std::string flag = "any_nodes_is_in";
 					//std::string flag = "GP_is_in";
 
-                    // check
                     if (flag == "GP_is_in")
                     {
                         // check if new GP is inside element
@@ -678,8 +677,9 @@ protected:
     
                         if (condition_is_active == false) // the inactive old elements have damage 0
                         {
-                            Damage[j] = 0.95;
-							Threshold[j] = Other->GetValue(INITIAL_THRESHOLD);
+                            Damage[j] = 0.97;
+                            Threshold[j] = Other->GetValue(INITIAL_THRESHOLD); // does not work TODO
+                            Distance[j] = 1.0e24;  // avoid to map this value 
                         }
                         if (condition_is_active == false && GPIsInside == true)
                         {
@@ -701,8 +701,9 @@ protected:
     
                         if (condition_is_active == false) // the inactive old elements have damage 0
                         {
-                            Damage[j] = 0.95;
+                            Damage[j] = 0.97;
 							Threshold[j] = Other->GetValue(INITIAL_THRESHOLD);
+							Distance[j] = 1.0e24;  // avoid to map this value 
                         }
 						int num_nodes = 0;
                         for (int node = 0; node < 3; node++)
@@ -724,20 +725,20 @@ protected:
 					//	KRATOS_WATCH(Damage[j])
 					//	KRATOS_WATCH(Damage[j])
 					//}
-                    // if (Me->Id() == 7)
-                    // {
-                    //     std::cout<<"***************"<<std::endl;
-                    //     KRATOS_WATCH(X_me)
-                    //     KRATOS_WATCH(Y_me)
-                    //     KRATOS_WATCH(X_other)
-                    //     KRATOS_WATCH(Y_other)
-                    //     KRATOS_WATCH(Other->Id())
-                    //     //KRATOS_WATCH(GaussPointNewVector.size())
-                    //      KRATOS_WATCH(Distance[j])
-                    //    KRATOS_WATCH(Damage[j])
-                    //    KRATOS_WATCH(Threshold[j])
-                    //    std::cout<<"***************"<<std::endl;
-                    // }
+                     //if (Me->Id() == 3465)
+                     //{
+                     //    std::cout<<"***************"<<std::endl;
+                     //    //KRATOS_WATCH(X_me)
+                     //    //KRATOS_WATCH(Y_me)
+                     //    //KRATOS_WATCH(X_other)
+                     //    //KRATOS_WATCH(Y_other)
+                     //   KRATOS_WATCH(Other->Id())
+                     //    //KRATOS_WATCH(GaussPointNewVector.size())
+                     //   KRATOS_WATCH(Distance[j])
+                     //   KRATOS_WATCH(Damage[j])
+                     //   KRATOS_WATCH(Threshold[j])
+                     //   std::cout<<"***************"<<std::endl;
+                     //}
 
 
                 }
@@ -883,8 +884,8 @@ protected:
             Y[node] = NodesElem[node].Y();
         }
 
-        rCoordinates[0] = 0.33333*(X[0] + X[1] + X[2]);
-        rCoordinates[1] = 0.33333*(Y[0] + Y[1] + Y[2]);
+        rCoordinates[0] = (X[0] + X[1] + X[2]) / 3.0;
+        rCoordinates[1] = (Y[0] + Y[1] + Y[2]) / 3.0;
     }
 
 }; //Class
