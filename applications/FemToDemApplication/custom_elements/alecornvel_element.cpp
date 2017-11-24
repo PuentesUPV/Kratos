@@ -351,8 +351,8 @@ namespace Kratos
 			if (dimension == 2) IntegrationWeight *= GetProperties()[THICKNESS];
 			this->SetValue(INTEGRATION_COEFFICIENT, IntegrationWeight);
 
-			Matrix B = ZeroMatrix(voigt_size, dimension*number_of_nodes);
-			B = this->GetBMatrix();
+			//Matrix B = ZeroMatrix(voigt_size, dimension*number_of_nodes);
+			const Matrix& B = this->GetBMatrix();
 
 			Vector IntegratedStressVector = ZeroVector(voigt_size);
 
@@ -485,8 +485,8 @@ namespace Kratos
 
 
 
-			Vector StressVector = ZeroVector(3);
-			StressVector = this->GetValue(STRESS_VECTOR);
+			//Vector StressVector = ZeroVector(3);
+			const Vector& StressVector = this->GetValue(STRESS_VECTOR);
 			IntegratedStressVector = (1 - damage_element)*StressVector;
 			this->SetIntegratedStressVector(IntegratedStressVector);
 
@@ -893,10 +893,10 @@ namespace Kratos
 		
 	}
 
-	double AleCornVelElement::CalculateLchar(AleCornVelElement* CurrentElement, Element NeibElement, int cont)
+	double AleCornVelElement::CalculateLchar(AleCornVelElement* CurrentElement, const Element& NeibElement, int cont)
 	{
 		Geometry< Node < 3 > >& NodesElem1 = CurrentElement->GetGeometry();  // 3 nodes of the Element 1
-		Geometry< Node < 3 > >& NodesElem2 = NeibElement.GetGeometry();  // "         " 2
+		Geometry< Node < 3 > > NodesElem2  = NeibElement.GetGeometry();      // "         " 2
 		Vector Xcoord, Ycoord;
 		Xcoord.resize(3);
 		Ycoord.resize(3);

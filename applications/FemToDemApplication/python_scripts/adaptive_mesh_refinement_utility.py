@@ -163,7 +163,7 @@ class AdaptiveMeshRefinementUtility:
         #Wait()
         
         print("----------------------------------")
-        print(" START MESH REFINEMENT ITERATIONS ")
+        print("      START MESH REFINEMENT       ")
         print("----------------------------------")
         
         mesh_convergence = False
@@ -173,7 +173,7 @@ class AdaptiveMeshRefinementUtility:
         while(mesh_convergence == False and iteration_number < max_num_iter ):
             
             iteration_number = iteration_number + 1
-            print("MESH ITERATION : ", iteration_number)
+            #print("MESH ITERATION : ", iteration_number)
             
             ## Generate files for new mesh ----------------------------------------------------------------------------------
             #print("aqui peta")
@@ -315,7 +315,7 @@ class AdaptiveMeshRefinementUtility:
             
             
             #model_part.ProcessInfo[MESH_REFINED] = 1
-#------------------------------------------------------------------->> Aqui estamos
+
             ## Mapping of variables -----------------------------------------------------------------------------------------
             
             MappingVariablesProcess(model_part_old, model_part, "Constant", Mapping_Procedure).Execute()

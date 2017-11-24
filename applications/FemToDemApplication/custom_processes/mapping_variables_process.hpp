@@ -402,8 +402,9 @@ protected:
         //double RowSize = (Y_max - Y_min) / NRows;
         //double ColumnSize = (X_max - X_min) / NColumns;
 
-		int NRows    = int((Y_max - Y_min) / (25.1 * mAverageElementLength));
-		int NColumns = int((X_max - X_min) / (25.1 * mAverageElementLength));
+        // if it's too big, Nncol could be 0 -> error
+		int NRows    = int((Y_max - Y_min) / (10.0 * mAverageElementLength));
+		int NColumns = int((X_max - X_min) / (10.0 * mAverageElementLength));
 
 		double RowSize = (Y_max - Y_min) / NRows;
 		double ColumnSize = (X_max - X_min) / NColumns;
@@ -442,6 +443,8 @@ protected:
 
             if(Row == NRows) Row = NRows - 1;
             if(Column == NColumns) Column = NColumns - 1;
+
+			//KRATOS_WATCH((*it)->Id())
 
             pGaussPointOldMatrix[Row][Column].GaussPointOldVector.push_back(GaussPointOld(*it, X_me, Y_me));
 
